@@ -1,0 +1,29 @@
+[cloudflare]
+api_token = "replace-with-cloudflare-api-token"
+zone_id = "replace-with-cloudflare-zone-id"
+
+[runtime]
+interval_seconds = 300
+timeout_seconds = 10
+notify_on_no_change = false
+
+[ip]
+ipv4_endpoint = "https://api.ipify.org"
+ipv6_endpoint = "https://api6.ipify.org"
+
+[[records]]
+name = "example.com"
+type = "A"
+ttl = 1
+proxied = false
+
+[[records]]
+name = "example.com"
+type = "AAAA"
+ttl = 1
+proxied = false
+
+[telegram]
+enabled = false
+bot_token = ""
+chat_id = ""
