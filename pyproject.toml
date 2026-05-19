@@ -10,6 +10,10 @@ dependencies = []
 [project.scripts]
 ddns-cf = "ddns_cf.cli:main"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
