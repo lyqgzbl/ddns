@@ -9,6 +9,7 @@ set -Eeuo pipefail
 #   sudo bash deploy.sh --uninstall  # 卸载
 # =============================================================================
 
+REPO_URL="https://github.com/lyqgzbl/ddns-cf.git"
 INSTALL_DIR="/opt/ddns-cf"
 CONFIG_DIR="/etc/ddns-cf"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
@@ -211,7 +212,22 @@ do_install() {
         mkdir -p "${INSTALL_DIR}"
     fi
 
-    cp -a "${SCRIPT_DIR}/." "${INSTALL_DIR}/"
+    if [[ -f "${SCRIPT_DIR}/pyproject.toml" && -d "${SCRIPT_DIR}/src/ddns_cf" ]]; then
+        info "检测到本地源码，从本地复制项目文件..."
+        cp -a "${SCRIPT_DIR}/." "${INSTALL_DIR}/"
+    else
+        info "未检测到本地源码，正在从 ${REPO_URL} 克隆项目..."
+        if ! command -v git >/dev/null 2>&1; then
+            die "此系统未安装 git，请先安装 git，或者直接下载源码包运行安装脚本"
+        fi
+        
+        local tmp_clone_dir
+        tmp_clone_dir="$(mktemp -d)"
+        git clone -q "${REPO_URL}" "${tmp_clone_dir}"
+        cp -a "${tmp_clone_dir}/." "${INSTALL_DIR}/"
+        rm -rf "${tmp_clone_dir}"
+    fi
+
     rm -rf "${INSTALL_DIR}/.git" \
            "${INSTALL_DIR}/.venv" \
            "${INSTALL_DIR}/.pytest_cache" \
