@@ -2,7 +2,30 @@
 
 一个足够精简的 Linux 服务器 DDNS 服务，只支持 Cloudflare，支持 IPv4 `A` 和 IPv6 `AAAA` 记录，更新成功或失败时可选 Telegram 通知。
 
-## 安装
+## 快速部署
+
+一键交互式部署（需要 root 权限）：
+
+```bash
+sudo bash deploy.sh
+```
+
+脚本会自动完成以下步骤：
+
+1. 检查运行环境（Python >= 3.11）
+2. 安装 uv 包管理器（如未安装）
+3. 部署代码到 `/opt/ddns-cf`（可自定义）
+4. 创建系统用户 `ddns`
+5. 交互式引导生成配置文件
+6. 安装并启动 systemd 服务
+
+卸载：
+
+```bash
+sudo bash deploy.sh --uninstall
+```
+
+## 手动安装
 
 ```bash
 uv sync
@@ -44,6 +67,8 @@ bot_token = "tg_bot_token"
 chat_id = "123456789"
 ```
 
+完整配置选项见 `examples/config.toml`。
+
 ## 运行
 
 单次检查：
@@ -58,9 +83,15 @@ uv run ddns-cf --config /etc/ddns-cf/config.toml --once
 uv run ddns-cf --config /etc/ddns-cf/config.toml
 ```
 
-systemd 示例在 `systemd/ddns-cf.service`。部署时需要按实际安装路径调整 `WorkingDirectory` 和 `ExecStart`。
+通过 `deploy.sh` 部署后，使用 systemd 管理服务：
 
-## 检查
+```bash
+systemctl status ddns-cf      # 查看状态
+journalctl -u ddns-cf -f      # 查看日志
+systemctl restart ddns-cf      # 重启服务
+```
+
+## 开发
 
 ```bash
 uv run ruff format .
