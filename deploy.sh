@@ -198,7 +198,7 @@ do_install() {
             info "跳过代码部署，使用现有文件"
             if [[ ! -d "${INSTALL_DIR}/.venv" ]]; then
                 info "检测到缺少 .venv，正在执行 uv sync..."
-                uv sync --directory "${INSTALL_DIR}"
+                uv sync --directory "${INSTALL_DIR}" --python "${PYTHON_BIN}"
             fi
             step_create_user
             step_permissions
@@ -237,7 +237,7 @@ do_install() {
     success "代码已部署到 ${INSTALL_DIR}"
 
     info "正在安装 Python 依赖（uv sync）..."
-    uv sync --directory "${INSTALL_DIR}" --no-dev
+    uv sync --directory "${INSTALL_DIR}" --python "${PYTHON_BIN}" --no-dev
     success "依赖安装完成"
 
     step_create_user
@@ -476,7 +476,6 @@ Group=${SERVICE_GROUP}
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=true
 ReadWritePaths=${CONFIG_DIR}
 
 [Install]
