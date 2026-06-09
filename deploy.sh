@@ -127,7 +127,17 @@ check_python() {
 }
 
 check_uv() {
-    command -v uv >/dev/null 2>&1
+    if command -v uv >/dev/null 2>&1; then
+        return 0
+    fi
+    local dir
+    for dir in /usr/local/bin "${HOME}/.local/bin" "${SUDO_USER:+/home/${SUDO_USER}/.local/bin}"; do
+        if [[ -n "${dir}" && -x "${dir}/uv" ]]; then
+            export PATH="${dir}:${PATH}"
+            return 0
+        fi
+    done
+    return 1
 }
 
 on_error() {
