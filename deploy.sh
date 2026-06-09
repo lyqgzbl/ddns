@@ -9,7 +9,7 @@ set -Eeuo pipefail
 #   sudo bash deploy.sh --uninstall  # 卸载
 # =============================================================================
 
-REPO_URL="https://github.com/lyqgzbl/ddns-cf.git"
+REPO_URL="https://github.com/lyqgzbl/ddns.git"
 INSTALL_DIR="/opt/ddns-cf"
 CONFIG_DIR="/etc/ddns-cf"
 CONFIG_FILE="${CONFIG_DIR}/config.toml"
