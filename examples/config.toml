@@ -27,3 +27,4 @@ proxied = false
 enabled = false
 bot_token = ""
 chat_id = ""
+proxy = ""

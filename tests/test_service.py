@@ -24,6 +24,7 @@ class FakeHttp(HttpClient):
         self.records: dict[tuple[str, str], dict[str, Any]] = {}
         self.requests: list[tuple[str, str, dict[str, Any] | None, dict[str, str] | None]] = []
         self.telegram_messages: list[str] = []
+        self.last_proxy: str | None = None
 
     def request(
         self,
@@ -34,9 +35,12 @@ class FakeHttp(HttpClient):
         json_body: dict[str, Any] | None = None,
         form_body: dict[str, str] | None = None,
         timeout: float = 10,
+        proxy: str = "",
     ) -> HttpResponse:
         del headers, timeout
         self.requests.append((method, url, json_body, form_body))
+        if "api.telegram.org" in url:
+            self.last_proxy = proxy
 
         if url == "https://ipv4.test":
             return HttpResponse(200, self.ipv4.encode())
@@ -147,6 +151,20 @@ def test_telegram_disabled_skips_notification() -> None:
 
     assert result[0].status == "created"
     assert http.telegram_messages == []
+
+
+def test_telegram_proxy_passed_to_http_client() -> None:
+    config = replace(
+        _config(),
+        telegram=TelegramConfig(
+            enabled=True, bot_token="bot", chat_id="chat", proxy="http://127.0.0.1:7890"
+        ),
+    )
+    http = FakeHttp()
+
+    DdnsService(config, http).run_once()
+
+    assert http.last_proxy == "http://127.0.0.1:7890"
 
 
 def _config() -> AppConfig:

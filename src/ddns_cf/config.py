@@ -40,6 +40,7 @@ class TelegramConfig:
     enabled: bool = False
     bot_token: str = ""
     chat_id: str = ""
+    proxy: str = ""
 
     @property
     def usable(self) -> bool:
@@ -95,6 +96,7 @@ def parse_config(raw: dict[str, Any]) -> AppConfig:
         enabled=bool(telegram_raw.get("enabled", False)),
         bot_token=str(telegram_raw.get("bot_token", "")),
         chat_id=str(telegram_raw.get("chat_id", "")),
+        proxy=str(telegram_raw.get("proxy", "")).strip(),
     )
 
     return AppConfig(

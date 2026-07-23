@@ -13,7 +13,12 @@ def test_parse_config_with_multiple_records() -> None:
                 {"name": "example.com", "type": "A"},
                 {"name": "example.com", "type": "aaaa", "ttl": 120, "proxied": True},
             ],
-            "telegram": {"enabled": True, "bot_token": "bot", "chat_id": "chat"},
+            "telegram": {
+                "enabled": True,
+                "bot_token": "bot",
+                "chat_id": "chat",
+                "proxy": "http://127.0.0.1:7890",
+            },
         }
     )
 
@@ -23,6 +28,7 @@ def test_parse_config_with_multiple_records() -> None:
     assert config.records[1].ttl == 120
     assert config.records[1].proxied is True
     assert config.telegram.usable is True
+    assert config.telegram.proxy == "http://127.0.0.1:7890"
 
 
 def test_parse_config_rejects_invalid_record_type() -> None:

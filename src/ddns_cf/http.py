@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import ProxyHandler, Request, build_opener, urlopen
 
 
 class HttpError(RuntimeError):
@@ -34,6 +34,7 @@ class HttpClient:
         json_body: dict[str, Any] | None = None,
         form_body: dict[str, str] | None = None,
         timeout: float = 10,
+        proxy: str = "",
     ) -> HttpResponse:
         body: bytes | None = None
         request_headers = dict(headers or {})
@@ -47,6 +48,10 @@ class HttpClient:
 
         request = Request(url, data=body, headers=request_headers, method=method.upper())
         try:
+            if proxy:
+                opener = build_opener(ProxyHandler({"http": proxy, "https": proxy}))
+                with opener.open(request, timeout=timeout) as response:
+                    return HttpResponse(status=response.status, body=response.read())
             with urlopen(request, timeout=timeout) as response:
                 return HttpResponse(status=response.status, body=response.read())
         except HTTPError as error:

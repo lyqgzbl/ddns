@@ -65,6 +65,7 @@ type = "AAAA"
 enabled = true
 bot_token = "tg_bot_token"
 chat_id = "123456789"
+proxy = "http://127.0.0.1:7890"
 ```
 
 完整配置选项见 `examples/config.toml`。

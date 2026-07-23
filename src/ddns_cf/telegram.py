@@ -24,4 +24,5 @@ class TelegramNotifier:
                 "disable_web_page_preview": "true",
             },
             timeout=self._timeout,
+            proxy=self._config.proxy,
         )

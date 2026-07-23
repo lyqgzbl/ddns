@@ -406,6 +406,7 @@ proxied = ${rec_proxied}
     local tg_enabled="false"
     local tg_bot_token=""
     local tg_chat_id=""
+    local tg_proxy=""
 
     if confirm "是否启用 Telegram 通知？" "N"; then
         tg_enabled="true"
@@ -425,6 +426,9 @@ proxied = ${rec_proxied}
             ask "Telegram Chat ID"
             tg_chat_id="${REPLY}"
         done
+
+        ask "Telegram 代理地址（可选，如 http://127.0.0.1:7890）" ""
+        tg_proxy="${REPLY}"
     fi
 
     cat > "${CONFIG_FILE}" <<EOF
@@ -445,6 +449,7 @@ ${records_toml}
 enabled = ${tg_enabled}
 bot_token = "${tg_bot_token}"
 chat_id = "${tg_chat_id}"
+proxy = "${tg_proxy}"
 EOF
 
     chown "${SERVICE_USER}:${SERVICE_GROUP}" "${CONFIG_DIR}"
