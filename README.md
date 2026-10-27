@@ -70,7 +70,29 @@ proxy = "http://127.0.0.1:7890"
 
 完整配置选项见 `examples/config.toml`。
 
+### 从 Linux 网卡获取 IPv6
+
+```toml
+[ip]
+ipv6_interface = "eth0"
+
+[[records]]
+name = "example.com"
+type = "AAAA"
+ttl = 120
+proxied = false
+```
+
+需要安装 iproute2，并将 `eth0` 替换为实际网卡名
+网卡模式仅使用唯一可用的公网 IPv6，排除临时、已弃用及未就绪地址
+
 ## 运行
+
+唯读预检：
+
+```bash
+uv run ddns-cf --config /etc/ddns-cf/config.toml --dry-run
+```
 
 单次检查：
 

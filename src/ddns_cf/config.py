@@ -25,6 +25,7 @@ class RuntimeConfig:
 class IpConfig:
     ipv4_endpoint: str = "https://api.ipify.org"
     ipv6_endpoint: str = "https://api6.ipify.org"
+    ipv6_interface: str = ""
 
 
 @dataclass(frozen=True)
@@ -79,9 +80,13 @@ def parse_config(raw: dict[str, Any]) -> AppConfig:
     )
 
     ip_raw = _optional_mapping(raw, "ip")
+    ipv6_interface = ip_raw.get("ipv6_interface", "")
+    if not isinstance(ipv6_interface, str):
+        raise ConfigError("ip.ipv6_interface must be a string")
     ip = IpConfig(
         ipv4_endpoint=str(ip_raw.get("ipv4_endpoint", IpConfig.ipv4_endpoint)),
         ipv6_endpoint=str(ip_raw.get("ipv6_endpoint", IpConfig.ipv6_endpoint)),
+        ipv6_interface=ipv6_interface.strip(),
     )
 
     records_raw = raw.get("records")

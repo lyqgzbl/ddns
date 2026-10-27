@@ -14,6 +14,8 @@ class CloudflareRecord:
     name: str
     type: str
     content: str
+    ttl: int = 1
+    proxied: bool = False
 
 
 class CloudflareClient:
@@ -46,6 +48,8 @@ class CloudflareClient:
             name=str(result["name"]),
             type=str(result["type"]),
             content=str(result["content"]),
+            ttl=int(result.get("ttl", 1)),
+            proxied=bool(result.get("proxied", False)),
         )
 
     def create_record(self, record: DnsRecordConfig, content: str) -> CloudflareRecord:
@@ -57,6 +61,8 @@ class CloudflareClient:
             name=str(result["name"]),
             type=str(result["type"]),
             content=str(result["content"]),
+            ttl=int(result.get("ttl", 1)),
+            proxied=bool(result.get("proxied", False)),
         )
 
     def update_record(
@@ -70,6 +76,8 @@ class CloudflareClient:
             name=str(result["name"]),
             type=str(result["type"]),
             content=str(result["content"]),
+            ttl=int(result.get("ttl", 1)),
+            proxied=bool(result.get("proxied", False)),
         )
 
     def _request_json(

@@ -44,27 +44,36 @@ class DdnsService:
             self.run_once()
             self._sleep_until_next_tick()
 
-    def run_once(self) -> list[RecordResult]:
-        ips = fetch_ips(self._http, self._config.ip, self._config.runtime.timeout_seconds)
+    def run_once(self, *, dry_run: bool = False) -> list[RecordResult]:
+        ips = fetch_ips(
+            self._http,
+            self._config.ip,
+            self._config.runtime.timeout_seconds,
+            record_types={record.type for record in self._config.records},
+        )
         if not ips:
             message = "DDNS failed: no valid public IPv4 or IPv6 address was fetched"
             LOGGER.error(message)
-            self._notify(message)
+            if not dry_run:
+                self._notify(message)
             return [RecordResult(name="-", type="-", status="failed", message=message)]
 
         results = [
-            self._sync_record(record, ips.get(record.type)) for record in self._config.records
+            self._sync_record(record, ips.get(record.type), dry_run=dry_run)
+            for record in self._config.records
         ]
         for result in results:
             log = (
                 LOGGER.info
-                if result.status in {"created", "updated", "unchanged"}
+                if result.status in {"created", "updated", "unchanged", "planned"}
                 else LOGGER.error
             )
             log("%s %s %s: %s", result.type, result.name, result.status, result.message)
         return results
 
-    def _sync_record(self, record: DnsRecordConfig, target_ip: str | None) -> RecordResult:
+    def _sync_record(
+        self, record: DnsRecordConfig, target_ip: str | None, *, dry_run: bool = False
+    ) -> RecordResult:
         if target_ip is None:
             return RecordResult(
                 name=record.name,
@@ -75,13 +84,26 @@ class DdnsService:
 
         try:
             existing = self._cloudflare.find_record(record)
+            unchanged = (
+                existing is not None
+                and existing.content == target_ip
+                and existing.ttl == record.ttl
+                and existing.proxied == record.proxied
+            )
+            if dry_run:
+                action = "unchanged" if unchanged else "create" if existing is None else "update"
+                message = (
+                    f"dry run: {action} {record.type} {record.name} -> {target_ip}; "
+                    f"ttl={record.ttl}, proxied={record.proxied}"
+                )
+                return RecordResult(record.name, record.type, "planned", message)
             if existing is None:
                 created = self._cloudflare.create_record(record, target_ip)
                 message = f"created {record.type} {record.name} -> {created.content}"
                 self._notify(f"DDNS success: {message}")
                 return RecordResult(record.name, record.type, "created", message)
 
-            if existing.content == target_ip:
+            if unchanged:
                 message = f"{record.type} {record.name} already points to {target_ip}"
                 if self._config.runtime.notify_on_no_change:
                     self._notify(f"DDNS no change: {message}")
@@ -95,7 +117,8 @@ class DdnsService:
             return RecordResult(record.name, record.type, "updated", message)
         except Exception as error:
             message = f"{record.type} {record.name} failed: {error}"
-            self._notify(f"DDNS failed: {message}")
+            if not dry_run:
+                self._notify(f"DDNS failed: {message}")
             return RecordResult(record.name, record.type, "failed", message)
 
     def _notify(self, message: str) -> None:

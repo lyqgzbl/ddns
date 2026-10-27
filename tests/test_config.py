@@ -39,3 +39,14 @@ def test_parse_config_rejects_invalid_record_type() -> None:
                 "records": [{"name": "example.com", "type": "TXT"}],
             }
         )
+
+
+def test_ipv6_interface_is_optional_and_validated() -> None:
+    raw = {
+        "cloudflare": {"api_token": "token", "zone_id": "zone"},
+        "records": [{"name": "git.example.com", "type": "AAAA"}],
+    }
+    assert parse_config(raw).ip.ipv6_interface == ""
+    assert parse_config({**raw, "ip": {"ipv6_interface": " wlan0 "}}).ip.ipv6_interface == "wlan0"
+    with pytest.raises(ConfigError, match="ipv6_interface must be a string"):
+        parse_config({**raw, "ip": {"ipv6_interface": 123}})

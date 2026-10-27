@@ -10,6 +10,9 @@ notify_on_no_change = false
 [ip]
 ipv4_endpoint = "https://api.ipify.org"
 ipv6_endpoint = "https://api6.ipify.org"
+# Linux 网卡取址（如 wlan0）；留空使用 ipv6_endpoint。
+# 配置网卡后不会回退外部 API。只查询 records 中实际使用的地址类型。
+ipv6_interface = ""
 
 [[records]]
 name = "example.com"

@@ -167,6 +167,72 @@ def test_telegram_proxy_passed_to_http_client() -> None:
     assert http.last_proxy == "http://127.0.0.1:7890"
 
 
+def test_interface_only_ipv6_skips_all_ip_lookup_apis(monkeypatch: Any) -> None:
+    monkeypatch.setattr(
+        "ddns_cf.ip.fetch_interface_ipv6", lambda interface, timeout: "2606:4700::1"
+    )
+    config = replace(
+        _config(),
+        ip=IpConfig(ipv6_interface="wlan0"),
+        records=(DnsRecordConfig(name="git.example.com", type="AAAA", ttl=120),),
+    )
+    http = FakeHttp()
+
+    result = DdnsService(config, http).run_once()
+
+    assert result[0].status == "created"
+    assert http.records[("AAAA", "git.example.com")]["content"] == "2606:4700::1"
+    assert all("ipify.org" not in request[1] for request in http.requests)
+
+
+def test_ipv4_only_records_skip_ipv6_lookup() -> None:
+    http = FakeHttp()
+    DdnsService(_config(), http).run_once()
+    assert not any(request[1] == "https://ipv6.test" for request in http.requests)
+
+
+def test_dry_run_never_writes_or_sends_notifications() -> None:
+    for current_ip in [None, "198.51.100.1", "203.0.113.10"]:
+        http = FakeHttp()
+        if current_ip is not None:
+            http.records[("A", "example.com")] = {
+                "id": "record-1",
+                "type": "A",
+                "name": "example.com",
+                "content": current_ip,
+            }
+        result = DdnsService(_config(), http).run_once(dry_run=True)
+        assert result[0].status == "planned"
+        assert all(request[0] == "GET" for request in http.requests)
+        assert http.telegram_messages == []
+
+
+def test_dry_run_failure_does_not_notify() -> None:
+    http = FakeHttp(ipv4="invalid")
+    result = DdnsService(_config(), http).run_once(dry_run=True)
+    assert result[0].status == "failed"
+    assert http.telegram_messages == []
+    assert not any("dns_records" in request[1] for request in http.requests)
+
+
+def test_record_settings_are_corrected_even_when_address_is_unchanged() -> None:
+    http = FakeHttp()
+    http.records[("A", "example.com")] = {
+        "id": "record-1",
+        "type": "A",
+        "name": "example.com",
+        "content": http.ipv4,
+        "ttl": 600,
+        "proxied": True,
+    }
+    result = DdnsService(_config(), http).run_once()
+    assert result[0].status == "updated"
+    update = next(request[2] for request in http.requests if request[0] == "PUT")
+    assert update is not None
+    assert update["ttl"] == 1
+    assert update["proxied"] is False
+
+
 def _config() -> AppConfig:
     return AppConfig(
         cloudflare=CloudflareConfig(api_token="token", zone_id="zone"),

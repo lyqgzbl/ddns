@@ -392,13 +392,16 @@ proxied = ${rec_proxied}
     printf "\n"
     printf "${BOLD}── IP 检测端点 ──${RESET}\n"
 
-    local ip_v4_ep ip_v6_ep
+    local ip_v4_ep ip_v6_ep ip_v6_interface
 
     ask "IPv4 检测地址" "https://api.ipify.org"
     ip_v4_ep="${REPLY}"
 
     ask "IPv6 检测地址" "https://api6.ipify.org"
     ip_v6_ep="${REPLY}"
+
+    ask "IPv6 网卡（可选，如 wlan0；填写后不使用 IPv6 检测 API）" ""
+    ip_v6_interface="${REPLY}"
 
     printf "\n"
     printf "${BOLD}── Telegram 通知（可选）──${RESET}\n"
@@ -444,6 +447,7 @@ notify_on_no_change = ${rt_notify_no_change}
 [ip]
 ipv4_endpoint = "${ip_v4_ep}"
 ipv6_endpoint = "${ip_v6_ep}"
+ipv6_interface = "${ip_v6_interface}"
 ${records_toml}
 [telegram]
 enabled = ${tg_enabled}

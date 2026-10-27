@@ -17,6 +17,9 @@ def main() -> int:
         help="Path to TOML config file",
     )
     parser.add_argument("--once", action="store_true", help="Run one check then exit")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Check once without DNS writes or notifications"
+    )
     parser.add_argument("--debug", action="store_true", help="Enable debug logs")
     args = parser.parse_args()
 
@@ -32,8 +35,8 @@ def main() -> int:
         return 2
 
     service = DdnsService(config)
-    if args.once:
-        results = service.run_once()
+    if args.once or args.dry_run:
+        results = service.run_once(dry_run=args.dry_run)
         return 1 if any(result.status == "failed" for result in results) else 0
 
     service.run_forever()
